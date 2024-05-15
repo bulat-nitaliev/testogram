@@ -31,7 +31,7 @@ class UserModelAdmin(admin.ModelAdmin):
                 (None, {"fields": ("friends",)}),
                 ("Даты", { "fields": ( "date_joined","last_login", )})
             )
-    
+
     search_fields = ("id","username","email",)
     list_filter = (
         "is_staff",
@@ -73,27 +73,30 @@ class PostModelAdmin(admin.ModelAdmin):
 
     fields = ("author","title","body","get_comment_count","created_at",)
     readonly_fields = ("id","created_at","get_body","get_comment_count")
-    
+
     def get_body(self,obj):
         if len(obj.body) > 64:
             return obj.body[:61] + '...'
         return obj.body
-    
+
     def get_comment_count(self,obj):
         return obj.comments.count()
-    
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("comments")
+
     # search_fields = ["author"]
     list_filter = (
         AuthorFilter,
         ("created_at", DateRangeFilter),
         "author",
     )
-    
+
     get_body.short_description = 'body'
     get_comment_count.short_description = 'comment_count'
 
-    
-  
+
+
 
 
 # Register your models here.
