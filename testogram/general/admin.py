@@ -32,12 +32,16 @@ class UserModelAdmin(admin.ModelAdmin):
                 ("Даты", { "fields": ( "date_joined","last_login", )})
             )
 
-    search_fields = ("id","username","email",)
+    search_fields = ("id","username","email","friends",)
     list_filter = (
         "is_staff",
         "is_superuser",
         "is_active",
         ("date_joined", DateRangeFilter),
+    )
+
+    autocomplete_fields = (
+        "friends",
     )
 
 @admin.register(Reaction)
@@ -58,6 +62,9 @@ class CommentModelAdmin(admin.ModelAdmin):
     list_display_links = ("id","body",)
     search_fields = ("author","post",)
     list_filter = (AuthorFilter, PostFilter, "author","post",)
+    raw_id_fields = (
+        "author",
+    )
 
 @admin.register(Post)
 class PostModelAdmin(admin.ModelAdmin):
@@ -73,6 +80,12 @@ class PostModelAdmin(admin.ModelAdmin):
 
     fields = ("author","title","body","get_comment_count","created_at",)
     readonly_fields = ("id","created_at","get_body","get_comment_count")
+
+    search_fields = ("author",)
+
+    autocomplete_fields = (
+        "author",
+    )
 
     def get_body(self,obj):
         if len(obj.body) > 64:
