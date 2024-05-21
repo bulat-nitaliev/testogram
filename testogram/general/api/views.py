@@ -1,4 +1,4 @@
-from general.api.serializer import UserRegisterationSerializer, UserListSerializer
+from testogram.testogram.general.api.serializers import UserRegisterationSerializer, UserListSerializer
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from general.models import User
