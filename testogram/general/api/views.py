@@ -1,34 +1,53 @@
-<<<<<<< HEAD
-from testogram.testogram.general.api.serializers import UserRegisterationSerializer, UserListSerializer
-=======
-from general.api.serializer import UserRegisterationSerializer, UserListSerializer, UserRetrieveSerializer
->>>>>>> 142fcf6ac955ded93cf01852eeba3fae528df3e0
+from general.api.serializers import UserRegisterationSerializer, UserListSerializer, UserRetrieveSerializer
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from general.models import User
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.request import Request
 
 class UserViewSet(CreateModelMixin,ListModelMixin,RetrieveModelMixin, GenericViewSet):
-  queryset = User.objects.all().order_by('-id')
-  permission_classes = [IsAuthenticated]
+    queryset = User.objects.all().order_by('-id')
+    permission_classes = [IsAuthenticated]
 
-  
-  @action(detail=False, methods=["get"], url_path="me")
-  def me(self,request):
-    isinstance = self.request.user
-    serializer = self.get_serializer(isinstance)
-    return Response(serializer.data)
 
-  def get_serializer_class(self):
-    if self.action == 'create':
-      return UserRegisterationSerializer
-    if self.action in ['retrieve', 'me']:
-      return UserRetrieveSerializer
-    return UserListSerializer
+    @action(detail=False, methods=["get"], url_path="me")
+    def me(self,request:Request):
+        isinstance = self.request.user
+        serializer = self.get_serializer(isinstance)
+        print(serializer)
+        return Response(serializer.data)
 
-  def get_permissions(self):
-    if self.action == 'create':
-      self.permission_classes = [AllowAny]
-    return super().get_permissions()
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return UserRegisterationSerializer
+        if self.action in ['retrieve', 'me']:
+            return UserRetrieveSerializer
+        return UserListSerializer
+
+    def get_permissions(self):
+        if self.action == 'create':
+            self.permission_classes = [AllowAny]
+        return super().get_permissions()
+
+    @action(detail=True, methods=["get"])
+    def friends(self, request, pk=None):
+        user = self.get_object()
+        queryset = self.filter_queryset(
+          self.get_queryset().filter(friends=user)
+        )
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serilizer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serilizer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def get_queryset(self):
+        queryset = User.objects.all().prefetch_related('friends').order_by("-id")
+        return queryset
+
+
+
