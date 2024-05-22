@@ -1,8 +1,8 @@
-from general.api.serializers import (UserRegisterationSerializer, 
-                                     UserListSerializer, 
-                                     UserRetrieveSerializer, 
-                                     PostCreateUpdateSerializer, 
-                                     PostListSerializer, 
+from general.api.serializers import (UserRegisterationSerializer,
+                                     UserListSerializer,
+                                     UserRetrieveSerializer,
+                                     PostCreateUpdateSerializer,
+                                     PostListSerializer,
                                      PostRetrieveSerializer,
                                      CommentSerializer,
                                      ReactionSerializer,
@@ -63,14 +63,14 @@ class UserViewSet(CreateModelMixin,ListModelMixin,RetrieveModelMixin, GenericVie
     def get_queryset(self):
         queryset = User.objects.all().prefetch_related('friends').order_by("-id")
         return queryset
-    
+
     @action(detail=True, methods=['post'])
     def add_friend(self,request, pk=None):
         user = self.get_object()
         request.user.friends.add(user)
 
         return Response(f'Friend {user} added')
-    
+
     @action(detail=True, methods=['post'])
     def remove_friend(self,request, pk=None):
         user = self.get_object()
@@ -80,7 +80,7 @@ class UserViewSet(CreateModelMixin,ListModelMixin,RetrieveModelMixin, GenericVie
 
 
 class PostViewSet(ModelViewSet):
-    
+
     queryset = Post.objects.all().order_by("-id")
     permission_classes = [IsAuthenticated,]
 
@@ -90,7 +90,7 @@ class PostViewSet(ModelViewSet):
         elif self.action == 'retrieve':
             return PostRetrieveSerializer
         return PostCreateUpdateSerializer
-    
+
     def perform_update(self, serializer):
         instance = self.get_object()
         if instance.author != self.request.user:
@@ -119,13 +119,18 @@ class ReactionViewSet(CreateModelMixin, GenericViewSet):
     permission_classes = [IsAuthenticated,]
     serializer_class = ReactionSerializer
 
-class ChatViewSet(CreateModelMixin, ListModelMixin, DestroyModelMixin, GenericViewSet):
+class ChatViewSet(
+    CreateModelMixin,
+    ListModelMixin,
+    DestroyModelMixin,
+    GenericViewSet,
+):
     permission_classes = [IsAuthenticated]
 
-    def get_serializer(self):
-        if self.action == 'list':
+    def get_serializer_class(self):
+        if self.action == "list":
             return ChatListSerializer
-        if self.action == 'messages':
+        if self.action == "messages":
             return MessageListSerializer
         return ChatSerializer
 
@@ -144,11 +149,13 @@ class ChatViewSet(CreateModelMixin, ListModelMixin, DestroyModelMixin, GenericVi
             messages__isnull=False,
         ).annotate(
             last_message_datetime=Subquery(last_message_subquery),
-            last_message_content=Subquery(last_message_content_subquery)
-        ).select_related("user_1", "user_2").order_by('-last_message_datetime').distinct()
-
+            last_message_content=Subquery(last_message_content_subquery),
+        ).select_related(
+            "user_1",
+            "user_2",
+        ).order_by("-last_message_datetime").distinct()
         return qs
-    
+
     @action(detail=True, methods=["get"])
     def messages(self, request, pk=None):
         messages = self.get_object().messages.filter(chat__id=pk).annotate(
@@ -161,9 +168,13 @@ class ChatViewSet(CreateModelMixin, ListModelMixin, DestroyModelMixin, GenericVi
         serializer = self.get_serializer(messages, many=True)
         return Response(serializer.data)
 
-    
-  
-class MessageViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
+
+
+class MessageViewSet(
+    CreateModelMixin,
+    DestroyModelMixin,
+    GenericViewSet,
+):
     serializer_class = MessageSerializer
     permission_classes = [IsAuthenticated]
     queryset = Message.objects.all().order_by("-id")
@@ -172,8 +183,3 @@ class MessageViewSet(CreateModelMixin, DestroyModelMixin, GenericViewSet):
         if instance.author != self.request.user:
             raise PermissionDenied("Вы не являетесь автором этого сообщения.")
         instance.delete()
-
-#     def perform_destroy(self, instance):
-#         if instance.author != self.request.user:
-#             raise PermissionDenied("Вы не являетесь автором этого сообщения.")
-#         instance.delete()   
