@@ -23,7 +23,6 @@ from django.db.models import F, Case, When, CharField, Value, OuterRef, Subquery
 
 
 class UserViewSet(CreateModelMixin,ListModelMixin,RetrieveModelMixin, GenericViewSet):
-    queryset = User.objects.all().order_by('-id')
     permission_classes = [IsAuthenticated]
 
 
@@ -62,6 +61,7 @@ class UserViewSet(CreateModelMixin,ListModelMixin,RetrieveModelMixin, GenericVie
 
     def get_queryset(self):
         queryset = User.objects.all().prefetch_related('friends').order_by("-id")
+        # queryset = User.objects.all().order_by("-id")
         return queryset
 
     @action(detail=True, methods=['post'])
