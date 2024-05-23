@@ -12,6 +12,7 @@ class UserTestCase(APITestCase):
         self.user = UserFactory()
         self.client.force_authenticate(user=self.user)
         self.url = '/api/users/'
+        print(self)
 
     def test_user_list(self):
         UserFactory.create_batch(20)
@@ -21,7 +22,7 @@ class UserTestCase(APITestCase):
         self.assertEqual(len(response.data['results']), 10)
         self.assertEqual(response.data["count"], 21)
 
-    def test_user_list_response_structure(self):       
+    def test_user_list_response_structure(self):
         response = self.client.get(path=self.url, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -89,7 +90,7 @@ class UserTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(User.objects.all().count(), 1)
 
-    
+
     def test_user_add_friend(self):
         friend = UserFactory()
         url = f"{self.url}{friend.pk}/add_friend/"
@@ -188,7 +189,7 @@ class UserTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["results"]),3)
 
-        friend_ids = {user.pk for user in friends} 
+        friend_ids = {user.pk for user in friends}
         for friend in response.data["results"]:
             self.assertTrue(friend["id"] in friend_ids)
 
@@ -214,7 +215,7 @@ class UserTestCase(APITestCase):
         }
         self.assertDictEqual(response.data["results"][0], expected_data)
 
-    
+
     def test_me(self):
         target_user = UserFactory()
         self.client.force_authenticate(user=target_user)
@@ -256,19 +257,4 @@ class UserTestCase(APITestCase):
         self.assertDictEqual(expected_data, response.data)
 
 
-
-    
-
-    
-    
-    
- 
-   
-    
-   
-
-
-
-    
-   
 

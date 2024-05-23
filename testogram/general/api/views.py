@@ -30,7 +30,6 @@ class UserViewSet(CreateModelMixin,ListModelMixin,RetrieveModelMixin, GenericVie
     def me(self,request:Request):
         isinstance = self.request.user
         serializer = self.get_serializer(isinstance)
-        print(serializer)
         return Response(serializer.data)
 
     def get_serializer_class(self):
