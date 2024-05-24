@@ -158,8 +158,10 @@ class ReactionSerializer(serializers.ModelSerializer):
         fields = ("id", "author", "post", "value",)
 
     def create(self, validated_data):
-        reaction = Reaction.objects.filter(post=validated_data["post"], author=validated_data["author"])
-        print(type(reaction), reaction)
+        reaction = Reaction.objects.filter(
+            post=validated_data["post"],
+            author=validated_data["author"]
+        ).last()
         if not reaction:
             return Reaction.objects.create(**validated_data)
         if reaction.value == validated_data["value"]:

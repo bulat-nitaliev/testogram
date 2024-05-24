@@ -43,5 +43,25 @@ class ReactionsTestCase(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        # reaction.refresh_from_db()
-        # self.assertEqual(reaction.value, data["value"])
+        reaction.refresh_from_db()
+        self.assertEqual(reaction.value, data["value"])
+
+    def test_pass_the_same_value(self):
+        reaction = ReactionFactory(author=self.user, post=self.post, value=Reaction.Values.SMILE)
+        data = {
+            "post": self.post.id,
+            "value": Reaction.Values.SMILE
+        }
+        response = self.client.post(self.url, data=data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        reaction.refresh_from_db()
+        self.assertEqual(reaction.value, None)
+
+    def test_pass_invalid_value(self):
+        data = {
+            "post": self.post.id,
+            "value": "invalid value"
+        }
+        response = self.client.post(self.url, data=data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Reaction.objects.count(), 0)
