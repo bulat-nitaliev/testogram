@@ -1,7 +1,5 @@
 from rest_framework.test import APITestCase
-import json
 from rest_framework import status
-from django.core.serializers.json import DjangoJSONEncoder
 from django.contrib.auth.hashers import check_password
 from general.factories import PostFactory, UserFactory
 from general.models import User
@@ -21,6 +19,14 @@ class UserTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 10)
         self.assertEqual(response.data["count"], 21)
+
+    def test_unauthorized_list_user(self):
+        UserFactory.create_batch(20)
+        self.client.logout()
+        response = self.client.get(path=self.url, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
     def test_user_list_response_structure(self):
         response = self.client.get(path=self.url, format="json")
@@ -111,6 +117,14 @@ class UserTestCase(APITestCase):
         self.user.refresh_from_db()
         self.assertTrue(friend in self.user.friends.all())
 
+    def test_unauthorized_add_friend(self):
+        friend = UserFactory()
+        url = f"{self.url}{friend.pk}/add_friend/"
+        self.client.logout()
+        response = self.client.post(path=url, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
     def test_user_remove_friend(self):
         friend = UserFactory()
         self.user.friends.add(friend)
@@ -131,6 +145,13 @@ class UserTestCase(APITestCase):
 
         self.user.refresh_from_db()
         self.assertTrue(friend not in self.user.friends.all())
+
+    def test_unauthorized_remove_friend(self):
+        friend = UserFactory()
+        url = f"{self.url}{friend.pk}/remove_friend/"
+        self.client.logout()
+        response = self.client.post(path=url, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
     def test_retrieve_user(self):
@@ -174,6 +195,15 @@ class UserTestCase(APITestCase):
         }
         self.assertDictEqual(expected_data, response.data)
 
+    def test_unauthorized_retrieve_user(self):
+        target_user = UserFactory()
+        self.client.logout()
+        response = self.client.get(
+            path=f'{self.url}{target_user.pk}/',
+            format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
     def test_get_user_friends(self):
         target_user = UserFactory()
@@ -214,6 +244,14 @@ class UserTestCase(APITestCase):
             "is_friend": False,
         }
         self.assertDictEqual(response.data["results"][0], expected_data)
+
+    def test_unauthorized_get_user_friends(self):
+        target_user = UserFactory()
+        url = f'{self.url}{target_user.pk}/friends/'
+        self.client.logout()
+        response = self.client.get(path=url, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
     def test_me(self):
@@ -256,5 +294,8 @@ class UserTestCase(APITestCase):
         }
         self.assertDictEqual(expected_data, response.data)
 
-
+    def test_unauthorized_me(self):
+        self.client.logout()
+        response = self.client.get(path=f'{self.url}me/', format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
